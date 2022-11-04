@@ -1,0 +1,3 @@
+module github.com/spyzhov/chttp
+
+go 1.16
