@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
-	"sync/atomic"
 	"testing"
 )
 
@@ -131,18 +130,18 @@ func TestClient_Method(t *testing.T) {
 
 func TestClient_With(t *testing.T) {
 	c := NewClient(nil)
-	index := new(atomic.Int32)
+	var index int
 	for i := 0; i < 10; i++ {
-		c.With((func(i int32) Middleware {
+		c.With((func(i int) Middleware {
 			return func(request *http.Request, next RoundTripper) (*http.Response, error) {
-				if index.Load() != i {
-					t.Errorf("middleware called on wrong position: expected %d, actual %d", i, index.Load())
+				if index != i {
+					t.Errorf("middleware called on wrong position: expected %d, actual %d", i, index)
 				}
-				index.Add(1)
+				index++
 				request.Header.Add("x-index", fmt.Sprintf("%d", i))
 				return next(request)
 			}
-		})(int32(i)))
+		})(i))
 	}
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		values := request.Header.Values("x-index")
