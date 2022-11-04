@@ -3,6 +3,7 @@ package chttp
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -157,6 +158,24 @@ func TestClient_With(t *testing.T) {
 		t.Errorf("unexpected error: %s", err)
 	}
 	_ = req.Body.Close()
+}
+
+func TestClient_JSON(t *testing.T) {
+	body, _ := json.Marshal(123)
+	result, _ := json.Marshal(456)
+
+	server := getTestServer(t, http.MethodGet, "/", [][]byte{body}, http.StatusOK, result)
+	defer server.Close()
+
+	var res int
+	err := NewClient(nil).JSON().GET(context.TODO(), server.URL, 123, &res)
+	if err != nil {
+		t.Errorf("GET() error = %v", err)
+		return
+	}
+	if res != 456 {
+		t.Errorf("GET() wrong response \nactual: %v\n want: %v", res, 456)
+	}
 }
 
 func getTestServer(t *testing.T, method string, path string, bodies [][]byte, code int, result []byte) *httptest.Server {

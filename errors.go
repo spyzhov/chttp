@@ -19,7 +19,7 @@ func NewError(code int, body []byte, err error) *Error {
 }
 
 func (e *Error) Error() string {
-	if e != nil {
+	if e == nil {
 		return ""
 	}
 	return e.Unwrap().Error()
