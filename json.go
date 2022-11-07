@@ -25,7 +25,7 @@ func (c *JSONClient) Request(ctx context.Context, method string, url string, bod
 	if body != nil {
 		data, err = json.Marshal(body)
 		if err != nil {
-			return fmt.Errorf("marshaling body error: %w", err)
+			return NewError(nil, nil, fmt.Errorf("marshaling request error: %w", err))
 		}
 	}
 	res, err := c.Client.Request(ctx, method, url, data)
@@ -39,15 +39,15 @@ func (c *JSONClient) Request(ctx context.Context, method string, url string, bod
 	}()
 	data, err = io.ReadAll(res.Body)
 	if err != nil {
-		return NewError(res.StatusCode, data, fmt.Errorf("reading response body error: %w", err))
+		return NewError(res, data, fmt.Errorf("reading response body error: %w", err))
 	}
 	if res.StatusCode >= http.StatusMultipleChoices {
-		return NewError(res.StatusCode, data, nil)
+		return NewError(res, data, nil)
 	}
 	if len(data) > 0 {
 		err = json.Unmarshal(data, &result)
 		if err != nil {
-			return NewError(res.StatusCode, data, fmt.Errorf("unmarshaling response error: %w", err))
+			return NewError(res, data, fmt.Errorf("unmarshaling response error: %w", err))
 		}
 	}
 	return nil

@@ -8,7 +8,7 @@ import (
 )
 
 type Client struct {
-	http        *http.Client
+	HTTP        *http.Client
 	middlewares []Middleware
 	mu          sync.Mutex
 }
@@ -20,7 +20,7 @@ func NewClient(client *http.Client) *Client {
 	clone := *client
 
 	result := &Client{
-		http:        &clone,
+		HTTP:        &clone,
 		middlewares: []Middleware{},
 	}
 	clone.Transport = result.transport(clone.Transport)
@@ -39,7 +39,7 @@ func (c *Client) JSON() *JSONClient {
 }
 
 func (c *Client) Do(request *http.Request) (*http.Response, error) {
-	return c.http.Do(request)
+	return c.HTTP.Do(request)
 }
 
 func (c *Client) Request(ctx context.Context, method string, url string, body []byte) (*http.Response, error) {

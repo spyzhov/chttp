@@ -133,7 +133,6 @@ func TestJSONClient_Method(t *testing.T) {
 					}
 					c := NewJSON(nil)
 					c.With(tt.middlewares...)
-					url := "http://0.0.0.0:1234"
 					body := make([]byte, 0)
 
 					if tt.want != nil {
@@ -145,7 +144,7 @@ func TestJSONClient_Method(t *testing.T) {
 					}
 					server := getTestServer(t, method, tt.args.path, [][]byte{body}, tt.wantStatus, body)
 					defer server.Close()
-					url = server.URL
+					url := server.URL
 
 					err := c.Method(method)(context.TODO(), url+tt.args.path, tt.args.request, &tt.args.result)
 					if (err != nil) != tt.wantErr {

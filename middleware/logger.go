@@ -1,12 +1,16 @@
-package transport
+package middleware
 
 import (
 	"context"
 )
 
+// Logger interface provides full minimal necessary list to log data
 type Logger interface {
+	// WithContext necessary to update Logger entity with any useful information from the context.Context
 	WithContext(ctx context.Context) Logger
+	// WithField adds any value into the Logger entity with the given name
 	WithField(name string, value interface{}) Logger
+	// Printf is used to print the message
 	Printf(format string, args ...interface{})
 }
 

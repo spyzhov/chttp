@@ -1,4 +1,4 @@
-package transport
+package middleware
 
 import (
 	"net/http"
@@ -7,35 +7,32 @@ import (
 	"github.com/spyzhov/chttp"
 )
 
-type TraceMiddleware struct {
-	Name   string
-	Logger Logger
-}
+// Trace middleware adds short logs on each request.
+func Trace(logger Logger) chttp.Middleware {
+	return func(request *http.Request, next chttp.RoundTripper) (response *http.Response, err error) {
+		defer func(start time.Time) {
+			var path string
+			if request.URL != nil {
+				path = request.URL.Path
+			}
+			log := getLogger(logger).
+				WithContext(request.Context()).
+				WithField("method", request.Method).
+				WithField("host", request.Host).
+				WithField("path", path).
+				WithField("request_time", time.Since(start))
 
-func Trace(name string, logger Logger) chttp.Middleware {
-	return (&TraceMiddleware{Name: name, Logger: logger}).Middleware
-}
+			if response != nil {
+				log = log.
+					WithField("status_code", response.StatusCode).
+					WithField("content_length", response.ContentLength)
+			}
+			if err != nil {
+				log = log.WithField("error", err)
+			}
+			log.Printf("http client response")
+		}(time.Now())
 
-func (s *TraceMiddleware) Middleware(request *http.Request, next chttp.RoundTripper) (response *http.Response, err error) {
-	defer func(start time.Time) {
-		logger := getLogger(s.Logger).
-			WithContext(request.Context()).
-			WithField("name", s.Name).
-			WithField("method", request.Method).
-			WithField("host", request.Host).
-			WithField("path", request.RequestURI).
-			WithField("request_time", time.Since(start))
-
-		if response != nil {
-			logger = logger.
-				WithField("status_code", response.StatusCode).
-				WithField("content_length", response.ContentLength)
-		}
-		if err != nil {
-			logger = logger.WithField("error", err)
-		}
-		logger.Printf("http client response")
-	}(time.Now())
-
-	return next(request)
+		return next(request)
+	}
 }

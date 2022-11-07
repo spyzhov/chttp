@@ -227,3 +227,17 @@ func equalResponses(t *testing.T, actual *http.Response, wantBody []byte, status
 		t.Errorf("http.Response: wrong Body \nActual: %s\nWantTo: %s", actualBody, wantBody)
 	}
 }
+
+func ExampleNewClient() {
+	client := NewClient(nil)
+	response, err := client.HEAD(context.TODO(), "https://go.dev/")
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		_ = response.Body.Close()
+	}()
+
+	fmt.Printf("status: %d", response.StatusCode)
+	// Output: status: 200
+}

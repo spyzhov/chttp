@@ -1,2 +1,2 @@
-// Package transport provides different types of http.Client transports.
-package transport
+// Package middleware provides different types of middlewares for the cHTTP clients.
+package middleware
