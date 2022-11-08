@@ -4,7 +4,6 @@ import (
 	"context"
 	"io"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/spyzhov/chttp"
@@ -32,7 +31,7 @@ func NewPetClient(host string, apiKey string) *PetClient {
 
 // Update calls HTTP PUT /pet Update an existing pet
 func (c *PetClient) Update(ctx context.Context, pet Pet) (result Pet, err error) {
-	uri, err := c.url("", nil)
+	uri, err := url(c.path, "", nil)
 	if err != nil {
 		return result, err
 	}
@@ -42,7 +41,7 @@ func (c *PetClient) Update(ctx context.Context, pet Pet) (result Pet, err error)
 
 // Add calls HTTP POST /pet Update an existing pet
 func (c *PetClient) Add(ctx context.Context, pet Pet) (result Pet, err error) {
-	uri, err := c.url("", nil)
+	uri, err := url(c.path, "", nil)
 	if err != nil {
 		return result, err
 	}
@@ -52,7 +51,7 @@ func (c *PetClient) Add(ctx context.Context, pet Pet) (result Pet, err error) {
 
 // FindByStatus calls HTTP POST /pet/findByStatus Finds Pets by status
 func (c *PetClient) FindByStatus(ctx context.Context, status string) (result Pets, err error) {
-	uri, err := c.url("/findByStatus", map[string][]string{"status": {status}})
+	uri, err := url(c.path, "/findByStatus", map[string][]string{"status": {status}})
 	if err != nil {
 		return result, err
 	}
@@ -62,7 +61,7 @@ func (c *PetClient) FindByStatus(ctx context.Context, status string) (result Pet
 
 // FindByTags calls HTTP POST /pet/findByTags Finds Pets by tags
 func (c *PetClient) FindByTags(ctx context.Context, tags []string) (result Pets, err error) {
-	uri, err := c.url("/findByTags", map[string][]string{"tags[]": tags})
+	uri, err := url(c.path, "/findByTags", map[string][]string{"tags[]": tags})
 	if err != nil {
 		return result, err
 	}
@@ -72,7 +71,7 @@ func (c *PetClient) FindByTags(ctx context.Context, tags []string) (result Pets,
 
 // Find calls HTTP GET /pet/{petId} Find pet by ID
 func (c *PetClient) Find(ctx context.Context, petId string) (result Pet, err error) {
-	uri, err := c.url("/"+petId, nil)
+	uri, err := url(c.path, "/"+petId, nil)
 	if err != nil {
 		return result, err
 	}
@@ -89,7 +88,7 @@ func (c *PetClient) UpdateByID(ctx context.Context, petId string, name *string, 
 	if status != nil {
 		params["status"] = []string{*status}
 	}
-	uri, err := c.url("/"+petId, params)
+	uri, err := url(c.path, "/"+petId, params)
 	if err != nil {
 		return result, err
 	}
@@ -98,21 +97,18 @@ func (c *PetClient) UpdateByID(ctx context.Context, petId string, name *string, 
 }
 
 // Delete calls HTTP DELETE /pet/{petId} Deletes a pet
-func (c *PetClient) Delete(ctx context.Context, petId string) (result bool, err error) {
-	uri, err := c.url("/"+petId, nil)
+func (c *PetClient) Delete(ctx context.Context, petId string) (err error) {
+	uri, err := url(c.path, "/"+petId, nil)
 	if err != nil {
-		return result, err
+		return err
 	}
 	err = c.client.DELETE(ctx, uri, nil, nil)
-	if err == nil {
-		result = true
-	}
-	return result, err
+	return err
 }
 
 // UploadImage calls HTTP POST /pet/{petId}/uploadImage uploads an image
 func (c *PetClient) UploadImage(ctx context.Context, petId string, image io.Reader) (result ApiResponse, err error) {
-	uri, err := c.url("/"+petId+"/uploadImage", nil)
+	uri, err := url(c.path, "/"+petId+"/uploadImage", nil)
 	if err != nil {
 		return result, err
 	}
@@ -125,13 +121,4 @@ func (c *PetClient) UploadImage(ctx context.Context, petId string, image io.Read
 	}
 	err = c.client.UnmarshalHTTPResponse(response, err, &result)
 	return result, err
-}
-
-func (c *PetClient) url(path string, query map[string][]string) (string, error) {
-	uri, err := url.Parse(c.path + path)
-	if err != nil {
-		return "", err
-	}
-	uri.RawQuery = url.Values(query).Encode()
-	return uri.String(), nil
 }
