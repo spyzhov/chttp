@@ -19,11 +19,7 @@ func NewClient(host string, apiKey string) *Client {
 }
 
 func url(host, path string, query map[string][]string) (string, error) {
-	result, err := ulrp.JoinPath(host, path)
-	if err != nil {
-		return "", err
-	}
-	uri, err := ulrp.Parse(result)
+	uri, err := ulrp.Parse(host + path)
 	if err != nil {
 		return "", err
 	}
