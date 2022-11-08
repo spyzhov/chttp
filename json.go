@@ -29,25 +29,29 @@ func (c *JSONClient) Request(ctx context.Context, method string, url string, bod
 		}
 	}
 	res, err := c.Client.Request(ctx, method, url, data)
-	if err != nil {
-		return err
+	return c.UnmarshalHTTPResponse(res, err, &result)
+}
+
+func (c *JSONClient) UnmarshalHTTPResponse(response *http.Response, httpErr error, result interface{}) (err error) {
+	if httpErr != nil {
+		return NewError(response, nil, fmt.Errorf("requesting error: %w", err))
 	}
 	defer func() {
-		if res.Body != nil {
-			_ = res.Body.Close()
+		if response.Body != nil {
+			_ = response.Body.Close()
 		}
 	}()
-	data, err = io.ReadAll(res.Body)
+	data, err := io.ReadAll(response.Body)
 	if err != nil {
-		return NewError(res, data, fmt.Errorf("reading response body error: %w", err))
+		return NewError(response, data, fmt.Errorf("reading response body error: %w", err))
 	}
-	if res.StatusCode >= http.StatusMultipleChoices {
-		return NewError(res, data, nil)
+	if response.StatusCode >= http.StatusMultipleChoices {
+		return NewError(response, data, nil)
 	}
 	if len(data) > 0 {
 		err = json.Unmarshal(data, &result)
 		if err != nil {
-			return NewError(res, data, fmt.Errorf("unmarshaling response error: %w", err))
+			return NewError(response, data, fmt.Errorf("unmarshaling response error: %w", err))
 		}
 	}
 	return nil

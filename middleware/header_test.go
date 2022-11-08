@@ -13,7 +13,7 @@ func ExampleHeaders() {
 	client := chttp.NewClient(nil)
 	client.With(Headers(map[string]string{
 		"Accept": "*/*",
-	}))
+	}, false))
 }
 
 func TestHeaders(t *testing.T) {
@@ -27,7 +27,7 @@ func TestHeaders(t *testing.T) {
 	client := chttp.NewClient(nil)
 	client.With(Headers(map[string]string{
 		"Header": "static",
-	}))
+	}, true))
 	resp, err := client.GET(context.Background(), server.URL)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)

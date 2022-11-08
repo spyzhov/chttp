@@ -7,10 +7,12 @@ import (
 )
 
 // Headers is a chttp.Middleware constructor to add static headers to request.
-func Headers(headers map[string]string) chttp.Middleware {
+func Headers(headers map[string]string, force bool) chttp.Middleware {
 	return func(request *http.Request, next chttp.RoundTripper) (*http.Response, error) {
 		for name, value := range headers {
-			request.Header.Set(name, value)
+			if force || request.Header.Get(name) == "" {
+				request.Header.Set(name, value)
+			}
 		}
 		return next(request)
 	}
