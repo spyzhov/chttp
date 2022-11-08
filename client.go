@@ -7,12 +7,14 @@ import (
 	"sync"
 )
 
+// Client is an HTTP client wrapper that injects middleware transport in the http.Client and provides a list of useful methods.
 type Client struct {
 	HTTP        *http.Client
 	middlewares []Middleware
-	mu          sync.Mutex
+	mu          sync.RWMutex
 }
 
+// NewClient is a constructor for the Client. If no http.Client provided as an argument, a new client will be created.
 func NewClient(client *http.Client) *Client {
 	if client == nil {
 		client = new(http.Client)
@@ -28,20 +30,30 @@ func NewClient(client *http.Client) *Client {
 	return result
 }
 
+// With appends Middleware to the end of the list. The first added will be called first (FIFO).
 func (c *Client) With(middleware ...Middleware) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.middlewares = append(c.middlewares, middleware...)
 }
 
+func (c *Client) getMiddlewares() []Middleware {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.middlewares[:]
+}
+
+// JSON creates a JSONClient wrapper with the given Client as a basic one.
 func (c *Client) JSON() *JSONClient {
 	return JSON(c)
 }
 
+// Do is the proxy to the same method in the http.Client.
 func (c *Client) Do(request *http.Request) (*http.Response, error) {
 	return c.HTTP.Do(request)
 }
 
+// Request creates a http.Request with the given arguments and calls the Client.Do method.
 func (c *Client) Request(ctx context.Context, method string, url string, body []byte) (*http.Response, error) {
 	request, err := http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(body))
 	if err != nil {
@@ -50,6 +62,8 @@ func (c *Client) Request(ctx context.Context, method string, url string, body []
 	return c.Do(request)
 }
 
+// Method returns a function implementation of the HTTP Method from the Client by its name.
+// Returns Client.GET as the default method.
 func (c *Client) Method(method string) func(ctx context.Context, url string, body ...[]byte) (*http.Response, error) {
 	switch method {
 	case http.MethodHead:
@@ -75,38 +89,47 @@ func (c *Client) Method(method string) func(ctx context.Context, url string, bod
 	}
 }
 
+// GET is an alias to do the Request with the http.MethodGet method.
 func (c *Client) GET(ctx context.Context, url string, body ...[]byte) (*http.Response, error) {
 	return c.Request(ctx, http.MethodGet, url, getBody(body))
 }
 
+// HEAD is an alias to do the Request with the http.MethodHead method.
 func (c *Client) HEAD(ctx context.Context, url string, body ...[]byte) (*http.Response, error) {
 	return c.Request(ctx, http.MethodHead, url, getBody(body))
 }
 
+// POST is an alias to do the Request with the http.MethodPost method.
 func (c *Client) POST(ctx context.Context, url string, body ...[]byte) (*http.Response, error) {
 	return c.Request(ctx, http.MethodPost, url, getBody(body))
 }
 
+// PUT is an alias to do the Request with the http.MethodPut method.
 func (c *Client) PUT(ctx context.Context, url string, body ...[]byte) (*http.Response, error) {
 	return c.Request(ctx, http.MethodPut, url, getBody(body))
 }
 
+// PATCH is an alias to do the Request with the http.MethodPatch method.
 func (c *Client) PATCH(ctx context.Context, url string, body ...[]byte) (*http.Response, error) {
 	return c.Request(ctx, http.MethodPatch, url, getBody(body))
 }
 
+// DELETE is an alias to do the Request with the http.MethodDelete method.
 func (c *Client) DELETE(ctx context.Context, url string, body ...[]byte) (*http.Response, error) {
 	return c.Request(ctx, http.MethodDelete, url, getBody(body))
 }
 
+// CONNECT is an alias to do the Request with the http.MethodConnect method.
 func (c *Client) CONNECT(ctx context.Context, url string, body ...[]byte) (*http.Response, error) {
 	return c.Request(ctx, http.MethodConnect, url, getBody(body))
 }
 
+// OPTIONS is an alias to do the Request with the http.MethodOptions method.
 func (c *Client) OPTIONS(ctx context.Context, url string, body ...[]byte) (*http.Response, error) {
 	return c.Request(ctx, http.MethodOptions, url, getBody(body))
 }
 
+// TRACE is an alias to do the Request with the http.MethodTrace method.
 func (c *Client) TRACE(ctx context.Context, url string, body ...[]byte) (*http.Response, error) {
 	return c.Request(ctx, http.MethodTrace, url, getBody(body))
 }

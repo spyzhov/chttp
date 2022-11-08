@@ -1,5 +1,8 @@
 # cHTTP
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/spyzhov/chttp.svg)](https://pkg.go.dev/github.com/spyzhov/chttp)
+[![Go Report Card](https://goreportcard.com/badge/github.com/spyzhov/chttp)](https://goreportcard.com/report/github.com/spyzhov/chttp)
+
 cHTTP is a Golang HTTP client wrapper provided with middleware.
 
 Middleware level is based on the modified [http.Client.Transport](https://pkg.go.dev/net/http#Client)
@@ -39,7 +42,7 @@ import (
 )
 
 func main() {
-    client := chttp.NewClient(nil)
+	client := chttp.NewClient(nil)
 	response, _ := client.HEAD(context.TODO(), "https://go.dev/")
 	
 	data, _ := httputil.DumpResponse(response, false)

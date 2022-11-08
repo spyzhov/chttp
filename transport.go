@@ -20,7 +20,7 @@ type transport struct {
 }
 
 func (t *transport) RoundTrip(request *http.Request) (*http.Response, error) {
-	middlewares := t.Client.middlewares[:]
+	middlewares := t.Client.getMiddlewares()
 	var next RoundTripper
 	next = func(request *http.Request) (*http.Response, error) {
 		var middleware Middleware
