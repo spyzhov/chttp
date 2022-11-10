@@ -1,7 +1,10 @@
 # cHTTP
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/spyzhov/chttp.svg)](https://pkg.go.dev/github.com/spyzhov/chttp)
+[![Build](https://github.com/spyzhov/chttp/actions/workflows/test.yml/badge.svg)](https://github.com/spyzhov/chttp/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/spyzhov/chttp/branch/master/graph/badge.svg)](https://codecov.io/gh/spyzhov/chttp)
 [![Go Report Card](https://goreportcard.com/badge/github.com/spyzhov/chttp)](https://goreportcard.com/report/github.com/spyzhov/chttp)
+[![GitHub license](https://img.shields.io/github/license/spyzhov/chttp?color=brightgreen)](https://github.com/spyzhov/chttp/blob/master/LICENSE)
 
 cHTTP is a Golang HTTP client wrapper provided with middleware.
 
