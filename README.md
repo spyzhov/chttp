@@ -107,11 +107,8 @@ logs, and headers transparently into all requests through the cHTTP clients.
 Current interface of the middleware is based on 2 types of functions:
 
 ```go
-// RoundTripper is a RoundTrip function implementation of the http.RoundTripper interface.
-type RoundTripper func(request *http.Request) (*http.Response, error)
-
 // Middleware is an extended interface to the RoundTrip function of the http.RoundTripper interface.
-type Middleware func(request *http.Request, next RoundTripper) (*http.Response, error)
+type Middleware func(request *http.Request, next func(request *http.Request) (*http.Response, error)) (*http.Response, error)
 ```
 
 Usage example:
@@ -134,7 +131,7 @@ func main() {
 	}
 	client := chttp.NewJSON(nil)
 	client.With(middleware.JSON(), middleware.Debug(true, nil))
-	client.With(func(request *http.Request, next chttp.RoundTripper) (*http.Response, error) {
+	client.With(func(request *http.Request, next func(request *http.Request) (*http.Response, error)) (*http.Response, error) {
 		fmt.Println("Before the request")
 		resp, err := next(request)
 		fmt.Println("After the request")
@@ -155,15 +152,15 @@ Adds a custom headers based on the request.
 **Example:** 
 
 ```go
-chttp.NewClient(nil).
-	With(middleware.CustomHeaders(func(request *http.Request) map[string]string {
-		if request.Method == http.MethodPost {
-			return map[string]string{
-				"Accept": "*/*",
-			}
-		}
-		return nil
-	}))
+client := chttp.NewClient(nil)
+client.With(middleware.CustomHeaders(func(request *http.Request) map[string]string {
+    if request.Method == http.MethodPost {
+        return map[string]string{
+            "Accept": "*/*",
+        }
+    }
+    return nil
+}))
 ```
 
 #### Debug
@@ -175,8 +172,8 @@ Dumps requests and responses in the logs.
 **Example:** 
 
 ```go
-chttp.NewClient(nil).
-	With(middleware.Debug(true, nil))
+client := chttp.NewClient(nil)
+client.With(middleware.Debug(true, nil))
 ```
 
 #### Headers
@@ -186,10 +183,10 @@ Adds a static headers.
 **Example:** 
 
 ```go
-chttp.NewClient(nil).
-	With(middleware.Headers(map[string]string{
-		"Accept": "*/*",
-	}))
+client := chttp.NewClient(nil)
+client.With(middleware.Headers(map[string]string{
+    "Accept": "*/*",
+}))
 ```
 
 #### JSON
@@ -199,8 +196,8 @@ Adds a `Content-Type` and `Accept` headers with the `application/json` value.
 **Example:** 
 
 ```go
-chttp.NewClient(nil).
-	With(middleware.JSON())
+client := chttp.NewClient(nil)
+client.With(middleware.JSON())
 ```
 
 #### Trace
@@ -210,8 +207,8 @@ Adds short logs on each request.
 **Example:** 
 
 ```go
-chttp.NewClient(nil).
-	With(middleware.Trace(nil))
+client := chttp.NewClient(nil)
+client.With(middleware.Trace(nil))
 ```
 
 # License
