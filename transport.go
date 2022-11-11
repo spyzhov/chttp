@@ -16,12 +16,12 @@ func (c *Client) transport(Default http.RoundTripper) http.RoundTripper {
 
 type transport struct {
 	Client  *Client
-	Default RoundTripper
+	Default func(request *http.Request) (*http.Response, error)
 }
 
 func (t *transport) RoundTrip(request *http.Request) (*http.Response, error) {
 	middlewares := t.Client.getMiddlewares()
-	var next RoundTripper
+	var next func(request *http.Request) (*http.Response, error)
 	next = func(request *http.Request) (*http.Response, error) {
 		var middleware Middleware
 		if len(middlewares) == 0 {
@@ -36,7 +36,7 @@ func (t *transport) RoundTrip(request *http.Request) (*http.Response, error) {
 }
 
 func (t *transport) getDefault() Middleware {
-	return func(request *http.Request, _ RoundTripper) (*http.Response, error) {
+	return func(request *http.Request, _ func(request *http.Request) (*http.Response, error)) (*http.Response, error) {
 		return t.Default(request)
 	}
 }
