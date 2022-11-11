@@ -68,7 +68,7 @@ func TestClient_Method(t *testing.T) {
 		{
 			name: "error",
 			middlewares: []Middleware{
-				func(request *http.Request, next RoundTripper) (*http.Response, error) {
+				func(request *http.Request, next func(request *http.Request) (*http.Response, error)) (*http.Response, error) {
 					return nil, fmt.Errorf("test error")
 				},
 			},
@@ -134,7 +134,7 @@ func TestClient_With(t *testing.T) {
 	var index int
 	for i := 0; i < 10; i++ {
 		c.With((func(i int) Middleware {
-			return func(request *http.Request, next RoundTripper) (*http.Response, error) {
+			return func(request *http.Request, next func(request *http.Request) (*http.Response, error)) (*http.Response, error) {
 				if index != i {
 					t.Errorf("middleware called on wrong position: expected %d, actual %d", i, index)
 				}

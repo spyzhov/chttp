@@ -87,7 +87,7 @@ func TestJSONClient_Method(t *testing.T) {
 		{
 			name: "error",
 			middlewares: []Middleware{
-				func(request *http.Request, next RoundTripper) (*http.Response, error) {
+				func(request *http.Request, next func(request *http.Request) (*http.Response, error)) (*http.Response, error) {
 					return nil, fmt.Errorf("test error")
 				},
 			},

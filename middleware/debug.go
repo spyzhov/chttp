@@ -9,7 +9,7 @@ import (
 
 // Debug is a constructor for Debug, that provides default transport
 func Debug(active bool, logger Logger) chttp.Middleware {
-	return func(request *http.Request, next chttp.RoundTripper) (*http.Response, error) {
+	return func(request *http.Request, next func(request *http.Request) (*http.Response, error)) (*http.Response, error) {
 		if !active {
 			return next(request)
 		}

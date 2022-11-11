@@ -9,7 +9,7 @@ import (
 
 // Trace middleware adds short logs on each request.
 func Trace(logger Logger) chttp.Middleware {
-	return func(request *http.Request, next chttp.RoundTripper) (response *http.Response, err error) {
+	return func(request *http.Request, next func(request *http.Request) (*http.Response, error)) (response *http.Response, err error) {
 		defer func(start time.Time) {
 			var path string
 			if request.URL != nil {
