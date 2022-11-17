@@ -196,3 +196,19 @@ func TestJSONClient_Request_status(t *testing.T) {
 		t.Errorf("Request() wrong error: %q", err.Error())
 	}
 }
+
+func ExampleJSONClient_GET() {
+	var fact struct {
+		Data []struct {
+			Fact string `json:"fact"`
+		} `json:"data"`
+	}
+	client := NewJSON(nil)
+	client.With(func(request *http.Request, next func(request *http.Request) (*http.Response, error)) (*http.Response, error) {
+		request.Header.Set("Content-Type", "application/json")
+		request.Header.Set("Accept", "application/json")
+		return next(request)
+	})
+	_ = client.GET(context.TODO(), "https://catfact.ninja/facts?limit=1&max_length=140", nil, &fact)
+	fmt.Println(fact.Data[0].Fact)
+}

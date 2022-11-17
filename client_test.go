@@ -6,10 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestClient_Method(t *testing.T) {
@@ -229,7 +231,14 @@ func equalResponses(t *testing.T, actual *http.Response, wantBody []byte, status
 }
 
 func ExampleNewClient() {
-	client := NewClient(nil)
+	client := NewClient(&http.Client{Timeout: 30 * time.Second})
+	client.With(func(request *http.Request, next func(request *http.Request) (*http.Response, error)) (*http.Response, error) {
+		log.Printf("before request: %s %s", request.Method, request.URL.String())
+		response, err := next(request)
+		log.Printf("after  request: %s %s", request.Method, request.URL.String())
+		fmt.Print("from middleware -> ")
+		return response, err
+	})
 	response, err := client.HEAD(context.TODO(), "https://go.dev/")
 	if err != nil {
 		panic(err)
@@ -239,5 +248,5 @@ func ExampleNewClient() {
 	}()
 
 	fmt.Printf("status: %d", response.StatusCode)
-	// Output: status: 200
+	// Output: from middleware -> status: 200
 }

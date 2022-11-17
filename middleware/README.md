@@ -1,5 +1,23 @@
 # Middlewares
 
+Middleware can be created with the defining function:
+
+```go
+func(request *http.Request, next func(request *http.Request) (*http.Response, error)) (*http.Response, error)
+```
+
+**Example:**
+
+```go
+client := chttp.NewClient(nil)
+client.With(func(request *http.Request, next func(request *http.Request) (*http.Response, error)) (*http.Response, error) {
+    // before action
+    response, err := next(request)
+    // before action
+    return response, err
+})
+```
+
 ## CustomHeaders
 
 Adds a custom headers based on the request.
@@ -55,6 +73,22 @@ client := chttp.NewClient(nil)
 client.With(middleware.JSON())
 ```
 
+## OpenTracing
+
+Adds an OpenTracing logs and headers to the request.
+
+Source: [https://github.com/spyzhov/chttp-middleware-opentracing](https://github.com/spyzhov/chttp-middleware-opentracing)
+
+```go
+import (
+	// ...
+	middleware "github.com/spyzhov/chttp-middleware-opentracing"
+)
+
+client := chttp.NewClient(nil)
+client.With(middleware.Opentracing())
+```
+
 ## Trace
 
 Adds short logs on each request.
@@ -65,3 +99,21 @@ Adds short logs on each request.
 client := chttp.NewClient(nil)
 client.With(middleware.Trace(nil))
 ```
+
+# TBD
+
+ - [ ] `Cache(interface{Get(string,interface{}), Set(string,interface{})}, GetKey func(*http.Request) string)`
+  
+   Client-wide caching layer.
+ 
+   If `GetKey` return a blank string, then do not cache.
+ - [ ] `Retry(GetCount func(*http.Request) int, BeforeRetry func (*http.Request, int) string)`
+
+   Automatically send a retry request in case of failure.
+ 
+   `GetCount` - returns the max retry amount. 
+ 
+   `BeforeRetry` - should be called before retry.
+
+   **TODO**: think about a structure as argument
+   `struct {GetCount func(*http.Request) int, BeforeRetry func (*http.Request, int) string}`
