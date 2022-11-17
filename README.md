@@ -90,12 +90,14 @@ import (
 
 func main() {
 	var fact struct {
-		Fact string `json:"fact"`
+		Data []struct {
+			Fact string `json:"fact"`
+		} `json:"data"`
 	}
 	client := chttp.NewJSON(nil) // same as chttp.NewClient(nil).JSON()
 	_ = client.GET(context.TODO(), "https://catfact.ninja/facts?limit=1&max_length=140", nil, &fact)
 
-	fmt.Println(fact.Fact)
+	fmt.Println(fact.Data[0].Fact)
 }
 ```
 
@@ -127,7 +129,9 @@ import (
 
 func main() {
 	var fact struct {
-		Fact string `json:"fact"`
+		Data []struct {
+			Fact string `json:"fact"`
+		} `json:"data"`
 	}
 	client := chttp.NewJSON(nil)
 	client.With(middleware.JSON(), middleware.Debug(true, nil))
@@ -139,7 +143,7 @@ func main() {
 	})
 	_ = client.GET(context.TODO(), "https://catfact.ninja/facts?limit=1&max_length=140", nil, &fact)
 
-	fmt.Println(fact.Fact)
+	fmt.Println(fact.Data[0].Fact)
 }
 ```
 
