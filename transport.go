@@ -4,19 +4,20 @@ import (
 	"net/http"
 )
 
-func (c *Client) transport(Default http.RoundTripper) http.RoundTripper {
-	if Default == nil {
-		Default = http.DefaultTransport
+func (c *Client) transport() http.RoundTripper {
+	base := c.base
+	if base == nil {
+		base = http.DefaultTransport
 	}
 	return &transport{
 		Client:  c,
-		Default: Default.RoundTrip,
+		Default: base,
 	}
 }
 
 type transport struct {
 	Client  *Client
-	Default func(request *http.Request) (*http.Response, error)
+	Default http.RoundTripper
 }
 
 func (t *transport) RoundTrip(request *http.Request) (*http.Response, error) {
@@ -37,6 +38,6 @@ func (t *transport) RoundTrip(request *http.Request) (*http.Response, error) {
 
 func (t *transport) getDefault() Middleware {
 	return func(request *http.Request, _ func(request *http.Request) (*http.Response, error)) (*http.Response, error) {
-		return t.Default(request)
+		return t.Default.RoundTrip(request)
 	}
 }

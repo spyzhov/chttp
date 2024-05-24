@@ -11,11 +11,12 @@ import (
 type Client struct {
 	HTTP        *http.Client
 	middlewares []Middleware
+	base        http.RoundTripper
 	mu          sync.RWMutex
 }
 
 // NewClient is a constructor for the Client. If no http.Client provided as an argument, a new client will be created.
-func NewClient(client *http.Client) *Client {
+func NewClient(client *http.Client, options ...Option) *Client {
 	if client == nil {
 		client = new(http.Client)
 	}
@@ -24,8 +25,13 @@ func NewClient(client *http.Client) *Client {
 	result := &Client{
 		HTTP:        &clone,
 		middlewares: []Middleware{},
+		base:        clone.Transport,
 	}
-	clone.Transport = result.transport(clone.Transport)
+	clone.Transport = result.transport()
+
+	for _, opt := range options {
+		opt(result)
+	}
 
 	return result
 }
@@ -40,7 +46,9 @@ func (c *Client) With(middleware ...Middleware) {
 func (c *Client) getMiddlewares() []Middleware {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	return c.middlewares[:]
+	clone := make([]Middleware, len(c.middlewares))
+	copy(clone, c.middlewares)
+	return clone
 }
 
 // JSON creates a JSONClient wrapper with the given Client as a basic one.
@@ -132,6 +140,24 @@ func (c *Client) OPTIONS(ctx context.Context, url string, body ...[]byte) (*http
 // TRACE is an alias to do the Request with the http.MethodTrace method.
 func (c *Client) TRACE(ctx context.Context, url string, body ...[]byte) (*http.Response, error) {
 	return c.Request(ctx, http.MethodTrace, url, getBody(body))
+}
+
+// Clone will clone an instance of the Client without references to the old one.
+func (c *Client) Clone() *Client {
+	if c == nil {
+		return nil
+	}
+	httpClient := *c.HTTP
+
+	clone := &Client{
+		HTTP:        &httpClient,
+		middlewares: make([]Middleware, len(c.middlewares)),
+		base:        c.base,
+	}
+	copy(clone.middlewares, c.middlewares)
+	httpClient.Transport = clone.transport()
+
+	return clone
 }
 
 func getBody(body [][]byte) []byte {
