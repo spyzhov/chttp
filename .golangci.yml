@@ -19,5 +19,4 @@ linters:
     - dupl
     - gofmt
     - lll
-    - megacheck
     - gocritic
