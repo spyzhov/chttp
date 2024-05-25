@@ -181,10 +181,7 @@ func TestJSONClient_Request(t *testing.T) {
 }
 
 func TestJSONClient_Request_status(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		writer.WriteHeader(http.StatusInternalServerError)
-		_, _ = writer.Write([]byte(`123`))
-	}))
+	server := testServerJSON(http.StatusInternalServerError, 123)
 	defer server.Close()
 	var result int
 	err := NewJSON(nil).Request(context.TODO(), http.MethodGet, server.URL, nil, &result)
@@ -192,7 +189,7 @@ func TestJSONClient_Request_status(t *testing.T) {
 		t.Errorf("Request() error wanted")
 		return
 	}
-	if err.Error() != "http error, status_code=500" {
+	if err.Error() != "wrong status code, status_code=500" {
 		t.Errorf("Request() wrong error: %q", err.Error())
 	}
 }
@@ -211,4 +208,64 @@ func ExampleJSONClient_GET() {
 	})
 	_ = client.GET(context.TODO(), "https://catfact.ninja/facts?limit=1&max_length=140", nil, &fact)
 	fmt.Println(fact.Data[0].Fact)
+}
+
+func TestJSONClient_Clone(t *testing.T) {
+	type example struct {
+		Foo string `json:"foo"`
+	}
+	server := testServerJSON(http.StatusOK, example{Foo: "bar"})
+	defer server.Close()
+
+	ctx := context.Background()
+	var result example
+	first := 0
+	second := 0
+
+	client := NewJSON(
+		nil,
+		WithMiddleware(func(request *http.Request, next func(request *http.Request) (*http.Response, error)) (*http.Response, error) {
+			first++
+			return next(request)
+		}),
+	)
+
+	clone := client.Clone()
+
+	err := clone.GET(ctx, server.URL, nil, &result)
+	if err != nil {
+		t.Errorf("GET() error: %v", err)
+		return
+	}
+	if first != 1 {
+		t.Errorf("first middleware called wrong times: %v", first)
+		return
+	}
+
+	another := client.Clone()
+	another.With(func(request *http.Request, next func(request *http.Request) (*http.Response, error)) (*http.Response, error) {
+		second++
+		return next(request)
+	})
+
+	err = another.GET(ctx, server.URL, nil, &result)
+	if err != nil {
+		t.Errorf("GET() error: %v", err)
+		return
+	}
+	if first != 2 {
+		t.Errorf("first middleware called wrong times: %v != 2", first)
+		return
+	}
+	if second != 1 {
+		t.Errorf("second middleware called wrong times: %v != 1", second)
+		return
+	}
+}
+
+func testServerJSON(status int, response interface{}) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+		writer.WriteHeader(status)
+		_ = json.NewEncoder(writer).Encode(response)
+	}))
 }

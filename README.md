@@ -147,6 +147,42 @@ func main() {
 }
 ```
 
+Usage example with `Option`:
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+
+	"github.com/spyzhov/chttp"
+	"github.com/spyzhov/chttp/middleware"
+)
+
+func main() {
+	var fact struct {
+		Data []struct {
+			Fact string `json:"fact"`
+		} `json:"data"`
+	}
+	client := chttp.NewJSON(nil, chttp.WithMiddleware(
+		middleware.JSON(), 
+		middleware.Debug(true, nil),
+		func(request *http.Request, next func(request *http.Request) (*http.Response, error)) (*http.Response, error) {
+			fmt.Println("Before the request")
+			resp, err := next(request)
+			fmt.Println("After the request")
+			return resp, err
+		},
+    ))
+	_ = client.GET(context.TODO(), "https://catfact.ninja/facts?limit=1&max_length=140", nil, &fact)
+
+	fmt.Println(fact.Data[0].Fact)
+}
+```
+
 ### List of middlewares
 
 #### CustomHeaders
