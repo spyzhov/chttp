@@ -7,7 +7,8 @@ import (
 	"sync"
 )
 
-// Client is an HTTP client wrapper that injects middleware transport in the http.Client and provides a list of useful methods.
+// Client is an HTTP client wrapper that injects middleware transport in the http.Client
+// and provides a list of useful methods.
 type Client struct {
 	HTTP        *http.Client
 	middlewares []Middleware

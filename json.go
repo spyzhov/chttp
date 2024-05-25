@@ -28,8 +28,15 @@ func NewJSON(client *http.Client, options ...Option) *JSONClient {
 	}
 }
 
-// Request prepares the request by marshaling request body and tries to unmarshal response with the JSONClient.UnmarshalHTTPResponse function.
-func (c *JSONClient) Request(ctx context.Context, method string, url string, body interface{}, result interface{}) (err error) {
+// Request prepares the request by marshaling request body and tries to unmarshal response
+// with the JSONClient.UnmarshalHTTPResponse function.
+func (c *JSONClient) Request(
+	ctx context.Context,
+	method string,
+	url string,
+	body interface{},
+	result interface{},
+) (err error) {
 	data, err := marshal(body)
 	if err != nil {
 		return err
@@ -67,7 +74,9 @@ func (c *JSONClient) UnmarshalHTTPResponse(response *http.Response, httpErr erro
 
 // Method returns a function implementation of the HTTP Method from the Client by its name.
 // Returns Client.GET as the default method.
-func (c *JSONClient) Method(method string) func(ctx context.Context, url string, body interface{}, result interface{}) error {
+func (c *JSONClient) Method(
+	method string,
+) func(ctx context.Context, url string, body interface{}, result interface{}) error {
 	switch method {
 	case http.MethodHead:
 		return c.HEAD

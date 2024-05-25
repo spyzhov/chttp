@@ -1,14 +1,23 @@
+run:
+  tests: false
+  concurrency: 4
+
 linters:
   enable:
     - gofmt
     - govet
-    - errcheck
+    - gocyclo
+    - ineffassign
+    - typecheck
+    - revive
+    - unconvert
+    - goconst
+    - gocyclo
     - staticcheck
     - unused
     - gosimple
-    - structcheck
-    - varcheck
-    - ineffassign
-    - deadcode
-    - typecheck
-    - gosec
+    - dupl
+    - gofmt
+    - lll
+    - megacheck
+    - gocritic

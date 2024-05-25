@@ -1,6 +1,8 @@
 package chttp
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -52,4 +54,27 @@ func (e *Error) Unwrap() error {
 		return fmt.Errorf("%w, status_code=%d", ErrStatusCode, e.Response.StatusCode)
 	}
 	return ErrUnknown
+}
+
+func (e *Error) UnmarshalTo(value interface{}) (bool, error) {
+	if e.IsStatusCode() {
+		err := json.Unmarshal(e.Body, &value)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+	return false, nil
+}
+
+func ErrorUnmarshalTo[Result any](err error) (result Result, _ error) {
+	base := new(Error)
+	if errors.As(err, &base) {
+		if ok, err := base.UnmarshalTo(&result); err != nil {
+			return result, err
+		} else if ok {
+			return result, nil
+		}
+	}
+	return result, err
 }
