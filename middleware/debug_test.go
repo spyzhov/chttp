@@ -12,7 +12,14 @@ import (
 
 func ExampleDebug() {
 	client := chttp.NewClient(nil)
-	client.With(Debug(os.Getenv("DEBUG") == "true", nil))
+	client.With(
+		Debug(
+			os.Getenv("DEBUG") == "true",
+			nil,
+			WithDebugDumpResponseBody(true),
+			WithDebugDumpRequestBody(true),
+		),
+	)
 }
 
 func TestDebug(t *testing.T) {
