@@ -8,7 +8,14 @@ import (
 )
 
 // Debug is a constructor for Debug, that provides default transport
-func Debug(active bool, logger Logger) chttp.Middleware {
+func Debug(active bool, logger Logger, options ...DebugOption) chttp.Middleware {
+	cfg := &debugConfig{
+		DumpRequestBody:  true,
+		DumpResponseBody: false,
+	}
+	for _, option := range options {
+		option(cfg)
+	}
 	return func(request *http.Request, next func(request *http.Request) (*http.Response, error)) (*http.Response, error) {
 		if !active {
 			return next(request)
@@ -23,7 +30,7 @@ func Debug(active bool, logger Logger) chttp.Middleware {
 			WithField("Host", request.Host).
 			WithField("Path", path)
 
-		data, err := httputil.DumpRequest(request, true)
+		data, err := httputil.DumpRequest(request, cfg.DumpRequestBody)
 		if err != nil {
 			log.WithField("error", err).Printf("error dumping request")
 		} else {
@@ -33,8 +40,9 @@ func Debug(active bool, logger Logger) chttp.Middleware {
 		response, err := next(request)
 		if err != nil {
 			log.WithField("error", err).Printf("error requesting")
-		} else {
-			data, err = httputil.DumpResponse(response, false)
+		}
+		if response != nil {
+			data, err = httputil.DumpResponse(response, cfg.DumpResponseBody)
 			if err != nil {
 				log.WithField("error", err).Printf("error dumping response")
 			} else {
@@ -42,5 +50,24 @@ func Debug(active bool, logger Logger) chttp.Middleware {
 			}
 		}
 		return response, err
+	}
+}
+
+type debugConfig struct {
+	DumpRequestBody  bool
+	DumpResponseBody bool
+}
+
+type DebugOption func(c *debugConfig)
+
+func WithDebugDumpRequestBody(dumpRequestBody bool) DebugOption {
+	return func(c *debugConfig) {
+		c.DumpRequestBody = dumpRequestBody
+	}
+}
+
+func WithDebugDumpResponseBody(dumpResponseBody bool) DebugOption {
+	return func(c *debugConfig) {
+		c.DumpResponseBody = dumpResponseBody
 	}
 }
